@@ -1,3 +1,8 @@
 http://d.hatena.ne.jp/arCtan/20071205/1196866914
 http://sky.geocities.jp/freakish_osprey/opengl/opengl_vsync.htm
 http://www21.atwiki.jp/opengl/pages/80.html
+
+・実際の物理サイズ
+・最大化時の速度
+・白地のスリット
+・論文集めよう
