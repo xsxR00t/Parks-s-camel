@@ -1,0 +1,312 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <Windows.h>
+#include <GL/GL.h>
+#include <GL/glui.h>
+#include <GL/glut.h>
+
+/** ユーザー定義関数 **/
+#include "defaultParam.h"
+#include "gl_init.h"
+#include "texture.h"
+#include "ppm.h"
+#include "draw.h"
+
+/* ppm.hに宣言された変数の定義 */
+// ラクダ画像
+GLubyte * camerlTexture_image;
+GLuint camerlTexture_id;
+// スリットの黒画像
+GLubyte * blackTexture_image;
+GLuint blackTexture_id;
+
+/**
+ * @brief Main関数
+ */
+int main(int argc, char **argv)
+{
+  // Window作成のための初期化関数
+  glutInit(&argc, argv);
+  // ディスプレイモードの選択
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+  // ウィンドウのサイズ
+  glutInitWindowSize(X_SIZE, Y_SIZE);
+  // ウィンドウ作成の名前
+  glutCreateWindow("Parks");
+
+  gl_init();     // 全体の初期化関数
+  loadTexture(); // テクスチャーの読み込み
+  setGlui();     // UI設定
+
+  glutKeyboardFunc(keyboard); // キーボードイベント登録
+  glutDisplayFunc(display);   // 描画イベント登録
+  //glutIdleFunc(idle);
+  glutMainLoop();             // ループ処理
+}
+
+/**
+ * @brief UI設定関数
+ */
+void setGlui(void)
+{
+  /* GLUIコントローラーの設定 */
+  GLUI * glui = GLUI_Master.create_glui("Control Panel", 0);
+
+  /* スリットサイズのスピナー追加 */
+  GLUI_Spinner * spinner_slitWidth = new GLUI_Spinner(glui, "Slit width", &slitWidth);
+  // 変化速度
+  spinner_slitWidth->set_speed(0.1);
+  // 限界値とその処理
+  spinner_slitWidth->set_float_limits(0, 1.0, GLUI_LIMIT_CLAMP);
+  // 初期値
+  spinner_slitWidth->set_float_val(0.01);
+
+  /* 移動スピードのスピナー追加 */
+  GLUI_Spinner * spinner_slitSpeed = new GLUI_Spinner(glui, "Move speed", &slitSpeed);
+  // 変化速度
+  spinner_slitSpeed->set_speed(0.1);
+  // 限界値とその処理
+  spinner_slitSpeed->set_float_limits(0, 1.0, GLUI_LIMIT_CLAMP);
+  // 初期値
+  spinner_slitSpeed->set_float_val(0.01);
+
+  // 仕切り線
+  glui->add_separator();
+
+  /* モード変更用のラジオボタン */
+  // テキスト
+  glui->add_statictext("Move select");
+  GLUI_RadioGroup * mode_radio = new GLUI_RadioGroup(glui, &mode);
+  // モード変更の項目設定
+  glui->add_radiobutton_to_group(mode_radio, "Slit Move");
+  glui->add_radiobutton_to_group(mode_radio, "Image Move");
+
+  // 仕切り線
+  glui->add_separator();
+
+  /* 画像変更のラジオボタン */
+  glui->add_statictext("Image select");
+  GLUI_RadioGroup * imageMode_radio = new GLUI_RadioGroup(glui, &ImageMode);
+  // 画像選択の項目設定
+  glui->add_radiobutton_to_group(imageMode_radio, "Normal image");
+  glui->add_radiobutton_to_group(imageMode_radio, "Mono image");
+
+
+  /* exitボタン */
+  glui->add_button("Exit", 0, gluiCallBack);
+
+  // idlezコールバック関数はGLUIで登録
+  GLUI_Master.set_glutIdleFunc(NULL);
+}
+
+/**
+ * @brief テクスチャの読み込み
+ */
+void loadTexture()
+{
+  /* ラクダ画像の読み込み */
+  // テクスチャ画像用配列の確保(幅、高さ、RGBの3)(幅、高さ、RGBの3)
+  camerlTexture_image = (GLubyte *)malloc(sizeof(GLubyte)* CAMEL_IMAGE_WIDTH * CAMEL_IMAGE_HEIGHT * 3);
+  // ファイルのロード
+  LoadPPM_ascii("a.ppm", camerlTexture_image, CAMEL_IMAGE_WIDTH, CAMEL_IMAGE_HEIGHT);
+  // ファイルをセットする
+  set_texture(camerlTexture_image, &camerlTexture_id, CAMEL_IMAGE_WIDTH, CAMEL_IMAGE_HEIGHT);
+
+  /* スリットの黒画像の読み込み */
+  // テクスチャ画像用配列の確保(幅、高さ、RGBの3)(幅、高さ、RGBの3)
+  blackTexture_image = (GLubyte *)malloc(sizeof(GLubyte)* BLACK_IMAGE_WIDTH * BLACK_IMAGE_HEIGHT * 3);
+  // ファイルのロード
+  LoadPPM_ascii("black.ppm", blackTexture_image, BLACK_IMAGE_WIDTH, BLACK_IMAGE_HEIGHT);
+  // ファイルをセットする
+  set_texture(blackTexture_image, &blackTexture_id, BLACK_IMAGE_WIDTH, BLACK_IMAGE_HEIGHT);
+}
+
+/**
+ * @brief 描画イベント関数
+ */
+void display()
+{
+  // バッファのクリア
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  // モデルを見る準備
+  glMatrixMode(GL_MODELVIEW);
+  // 行列を初期化
+  glLoadIdentity();
+
+  // 現在のパラメーターを表示
+  viewParam();
+
+  // 描画する
+  switch (mode)
+  {
+  case SLIT_MOVE_MODE:  // スリットが動く
+    draw_moveSlit(position_x, slitWidth);
+    break;
+  case IMAGE_MOVE_MODE: // 画像が動く
+    draw_moveImage(position_x, slitWidth);
+    break;
+  default:
+    break;
+  }
+
+  // 描画させる
+  glFlush();
+  // バッファの入れ替え
+  glutSwapBuffers();
+
+  // swap buf が終了するまでwait
+  glFinish();
+}
+
+/**
+* @brief キーボードイベント関数
+*/
+void keyboard(unsigned char key, int x, int y)
+{
+  switch (key)
+  {
+  // ESC でも終了させる
+  case '\033':
+    exit(0);
+    break;
+
+  // スペースキーでフルスクリーンモードにする
+  case ' ':
+    if (Change == false)
+    {
+      Change = true;
+      fullscreen();
+    }
+    else
+      Change = false;
+    break;
+
+  // スリットを左に移動
+  case 'a':
+    position_x -= slitSpeed;
+    break;
+
+  // スリットを右に移動
+  case 'd':
+    position_x += slitSpeed;
+    break;
+  }
+
+  // 不用意な領域にいかない
+  switch (mode)
+  {
+  case SLIT_MOVE_MODE:
+    if (position_x > 2.95)     // 右端に行き過ぎたとき
+      position_x = 0.0;
+    else if (position_x + slitWidth< 0.0) // 左端に行き過ぎたとき
+      position_x = 2.95;
+    break;
+  case IMAGE_MOVE_MODE:
+    if (position_x > 1.5 + (slitWidth / 2.0))      // 右端に行き過ぎたとき
+      position_x = -1.5 - (slitWidth / 2.0);
+    else if (position_x + 3.0 < 1.5 - (slitWidth / 2.0)) // 左端に行き過ぎたとき
+      position_x = 1.5 + (slitWidth / 2.0);
+    break;
+  default:
+    break;
+  }
+
+  glutPostRedisplay(); // 再描画要求
+}
+
+/**
+ * @brief 現在の(x,y,z)を表示
+ */
+void viewParam(void)
+{
+  printf("position_x : %lf\n", position_x);
+  printf("mode : %d\n", mode);
+}
+
+/**
+ * @brief 終了関数
+ */
+void gluiCallBack(int num)
+{
+  exit(0);
+}
+
+void idle(void)
+{
+  position_x += slitSpeed;
+  // 不用意な領域にいかない
+  if (position_x > 2.95)
+    position_x = 0.0;
+  else if (position_x < 0.0)
+    position_x = 2.95;
+
+  // 再描画(display関数を呼び出す)
+  glutPostRedisplay();
+  /*
+  // フレーム数をインクリメント
+  GLframe++;
+  // 経過時間を取得
+  GLtimenow = glutGet(GLUT_ELAPSED_TIME);
+
+  // 1秒だったらfpsを出力
+  if (GLtimenow - GLtimebase > 1000)
+  {
+    printf("fps : %f\r", GLframe * 1000.0 / (GLtimenow - GLtimebase));
+    // 基準時間を設定
+    GLtimebase = GLtimenow;
+    // フレーム数をリセット
+    GLframe = 0;
+  }*/
+}
+
+/**
+ * @brief フルスクリーンにする関数
+ */
+void fullscreen(){
+  int nMode = 0;
+  DEVMODE devMode;
+  HWND hWnd;
+  hWnd = GetActiveWindow();
+
+  // 描画変更される
+  if (Change)
+  {
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    while (EnumDisplaySettings(NULL, nMode++, &devMode))
+    {
+
+      // 640×480をサポートしているか
+      if (devMode.dmPelsWidth != X_SIZE || devMode.dmPelsHeight != Y_SIZE)
+        continue;
+
+      // 32ビットカラーをサポートしているか
+      if (devMode.dmBitsPerPel != 32)
+        continue;
+
+      // テストして切り替えれるなら
+      if (ChangeDisplaySettings(&devMode, CDS_TEST) == DISP_CHANGE_SUCCESSFUL)
+        break;
+    }
+    ChangeDisplaySettings(&devMode, CDS_FULLSCREEN);
+    glutFullScreen();
+    glViewport(0, 0, X_SIZE, Y_SIZE);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(30.4, (double)X_SIZE / (double)Y_SIZE, 0.1, 1000.0);
+    glMatrixMode(GL_MODELVIEW);
+  }
+
+  else{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    ChangeDisplaySettings(NULL, 0);
+    glutPositionWindow(100, 100);
+
+    glutReshapeWindow(X_SIZE, Y_SIZE);
+    glViewport(0, 0, X_SIZE, Y_SIZE);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(30.4, (double)X_SIZE / (double)Y_SIZE, 0.1, 1000.0);
+    glMatrixMode(GL_MODELVIEW);
+  }
+}
