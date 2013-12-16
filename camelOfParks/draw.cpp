@@ -10,7 +10,7 @@
  * @param x,y,z : 基準座標
  * @param slitWidth : スリットの幅
  */
-void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode)
+void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode, int slitColor)
 {
   /* 画像を描画 */
   // 初期座標をプッシュ
@@ -28,12 +28,12 @@ void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode)
   // 初期座標をプッシュ
   glPushMatrix();
   glTranslatef(x - 3.0, 0.0, -3.5);
-  createObjectSlit();
+  createObjectSlit(slitColor);
 
   // 初期座標をプッシュ
   glPushMatrix();
   glTranslatef(x + slitWidth, 0.0, -3.5);
-  createObjectSlit();
+  createObjectSlit(slitColor);
 }
 
 /**
@@ -41,18 +41,18 @@ void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode)
  * @param x : 基準x座標
  * @param slitWidth : スリット間隔
  */
-void draw_moveImage(GLfloat x, GLfloat slitWidth, int ImageMode)
+void draw_moveImage(GLfloat x, GLfloat slitWidth, int ImageMode, int slitColor)
 {
   /* スリット描画 */
   // 初期座標をプッシュ
   glPushMatrix();
   glTranslatef(-1.5 - (slitWidth / 2.0), 0.0, -3.5);
-  createObjectSlit();
+  createObjectSlit(slitColor);
 
   // 初期座標をプッシュ
   glPushMatrix();
   glTranslatef(1.5 + (slitWidth / 2.0), 0.0, -3.5);
-  createObjectSlit();
+  createObjectSlit(slitColor);
 
   /* 画像を描画 */
   // 初期座標をプッシュ
@@ -149,14 +149,38 @@ void createObject(void)
 /**
  * @brief スリットを作成するだけの関数
  */
-void createObjectSlit(void)
+void createObjectSlit(int slitColor)
 {
   // 画像テクスチャ作成
-  glBindTexture(GL_TEXTURE_2D, blackSlit.texture_id);
+  switch (slitColor)
+  {
+  case 0:
+    glBindTexture(GL_TEXTURE_2D, blackSlit.texture_id);
+    break;
+   
+  case 1:
+    glBindTexture(GL_TEXTURE_2D, whiteSlit.texture_id);
+    break;
+
+  default:
+    break;
+  }
   // スリット1枚目のプレートを作成
   createObject();
   // テクスチャのバインド解除
-  glBindTexture(GL_TEXTURE_2D, blackSlit.texture_id);
+  switch (slitColor)
+  {
+  case 0:
+    glBindTexture(GL_TEXTURE_2D, blackSlit.texture_id);
+    break;
+
+  case 1:
+    glBindTexture(GL_TEXTURE_2D, whiteSlit.texture_id);
+    break;
+
+  default:
+    break;
+  }
   // 初期座標に戻す
   glPopMatrix();
 }

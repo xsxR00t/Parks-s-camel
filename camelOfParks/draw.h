@@ -23,14 +23,14 @@
  * @param slitWidth : スリット間隔
  * @param ImageMode : 画像変更用の変数
  */
-void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode);
+void draw_moveSlit(GLfloat x, GLfloat slitWidth, int ImageMode, int slitColor);
 
 /**
  * @brief スリットが動く
  * @param x : 基準x座標
  * @param slitWidth : スリット間隔
  */
-void draw_moveImage(GLfloat x, GLfloat slitWidth, int ImageMode);
+void draw_moveImage(GLfloat x, GLfloat slitWidth, int ImageMode, int slitColor);
 
 /**
  * @brief 画像を張り替える
@@ -46,6 +46,6 @@ void createObject(void);
 /**
  * @brief スリットを作成するだけの関数
  */
-void createObjectSlit(void);
+void createObjectSlit(int slitColor);
 
 #endif

@@ -36,6 +36,8 @@ texture_t bactrianCamel_white;
 texture_t momotaro;
 
 texture_t blackSlit;
+texture_t whiteSlit;
+
 texture_t circle;
 texture_t square;
 texture_t triangle;
@@ -60,6 +62,7 @@ int now = 0, old = 0, base = 0;
 
 /* UI用変数 */
 int mode = IMAGE_MOVE_MODE;   // モード選択変数
+int slitColor = 0;  // スリット画像変更
 int ImageMode = 0;  // 画像選択変数
 int repetition = 0; // 反復機能用変数
 

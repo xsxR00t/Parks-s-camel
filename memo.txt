@@ -4,5 +4,4 @@ http://www21.atwiki.jp/opengl/pages/80.html
 
 ・実際の物理サイズ
 ・最大化時の速度
-・白地のスリット
 ・論文集めよう

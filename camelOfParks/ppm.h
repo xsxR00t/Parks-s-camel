@@ -31,6 +31,7 @@ extern texture_t momotaro;
 
 /* スリット用の黒背景 */
 extern texture_t blackSlit;
+extern texture_t whiteSlit;
 
 /* 単純図形 */
 extern texture_t circle;

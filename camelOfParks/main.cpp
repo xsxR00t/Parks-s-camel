@@ -79,6 +79,13 @@ void setGlui(void)
   // 仕切り線
   glui->add_separator();
 
+  // スリット色変え
+  GLUI_RadioGroup * slit_mode_radio = new GLUI_RadioGroup(glui, &slitColor);
+  glui->add_radiobutton_to_group(slit_mode_radio, "Black");
+  glui->add_radiobutton_to_group(slit_mode_radio, "White");
+
+  glui->add_separator();
+
   // 反復ボタン
   new GLUI_Checkbox(glui, "Repetition", &repetition);
 
@@ -147,6 +154,7 @@ void loadTexture()
 
   // スリットの黒画像
   runLoadTexture(&blackSlit, "black.ppm", 512, 512);
+  runLoadTexture(&whiteSlit, "white.ppm", 256, 256);
 
   // 単純画像
   runLoadTexture(&circle,   "circle.ppm",   640, 480);
@@ -251,11 +259,11 @@ void display()
   switch (mode)
   {
   case SLIT_MOVE_MODE:  // スリットが動く
-    draw_moveSlit(position_x, realSlitWidth, ImageMode);
+    draw_moveSlit(position_x, realSlitWidth, ImageMode, slitColor);
     break;
 
   case IMAGE_MOVE_MODE: // 画像が動く
-    draw_moveImage(position_x, realSlitWidth, ImageMode);
+    draw_moveImage(position_x, realSlitWidth, ImageMode, slitColor);
     break;
 
   default:
