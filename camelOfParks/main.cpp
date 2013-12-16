@@ -5,6 +5,7 @@
 #include <GL/glui.h>
 #include <GL/glut.h>
 
+
 /** ユーザー定義関数 **/
 #include "defaultParam.h"
 #include "gl_init.h"
@@ -128,6 +129,7 @@ void inputChangeSlitWidth(int num)
 
 void inputChangeSlitSpeed(int num)
 {
+  //realSlitSpeed = (GLfloat)((slitSpeed * DISPPIX_X * 60.0) / DISPSIZE_X);
   realSlitSpeed = (GLfloat)((slitSpeed * DISPSIZE_X * 3) / (58.823528 * DISPPIX_X * X_SIZE)) * 100.0;
   printf("change slit speed : %lf\n", realSlitSpeed);
 }
@@ -188,13 +190,6 @@ void runLoadTexture(texture_t * obj, char * filename, int width, int height)
  */
 void display()
 {
-  if (X_SIZE != glutGet(GLUT_WINDOW_WIDTH))
-  {
-    realSlitWidth = (GLfloat)((3 * DISPPIX_X * slitWidth) / (DISPSIZE_X * X_SIZE));
-    realSlitSpeed = (GLfloat)((slitSpeed * DISPSIZE_X * 3) / (58.823528 * DISPPIX_X * X_SIZE)) * 100.0;
-    printf("Slit speed : %lf\n", realSlitSpeed);
-  }
-
   // 移動方向判別
   if (!moveChange)
     position_x += realSlitSpeed;
@@ -280,17 +275,48 @@ void display()
 }
 
 /**
+* @brief キーボードイベント関数
+*/
+void keyboard(unsigned char key, int x, int y)
+{
+  switch (key)
+  {
+  case '\033': // ESC でも終了させる
+    exit(0);
+    break;
+
+  case ' ':    // スペースキーでフルスクリーンモードにする
+    if (!Change)
+      Change = true;
+    else
+      Change = false;
+    fullscreen();
+    break;
+
+  case 'r':    // 方向転換
+    if (!moveChange)
+      moveChange = true;
+    else
+      moveChange = false;
+    break;
+  }
+
+  glutPostRedisplay(); // 再描画要求
+}
+
+/**
  * @brief 現在の(x,y,z)を表示
  */
 void viewParam(void)
 {
   //printf("position_x : %lf\n", position_x);
   //printf("repetition : %d\n", repetition);
-  //printf("mode : %d\n", mode);
   //printf("Slit width : %lf\n", realSlitWidth);
+  printf("position_x : %lf\n", position_x);
+  printf("mode : %d\n", mode);
+  printf("repetition : %d\n", repetition);
+  printf("Slit width : %lf\n", realSlitWidth);
   printf("Slit speed : %lf\n", realSlitSpeed);
-  //printf("Carrent display width : %d\n", glutGet(GLUT_INIT_WINDOW_WIDTH));
-  printf("Dispplay width : %d\n", glutGet(GLUT_WINDOW_WIDTH));
 }
 
 /**
